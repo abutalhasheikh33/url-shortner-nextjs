@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db } from "mongodb";
 const uri = process.env.MONGODB_URI as string;
 if (!uri) {
   throw new Error("Please add MONGODB_URI to .env.local");
@@ -8,6 +8,15 @@ let clientPromise: Promise<MongoClient>;
 declare global {
   var _mongoClientPromise: Promise<MongoClient>;
 }
+export const initDb = async (db: Db) => {
+  const collections = await db.listCollections().toArray();
+  const names = collections.map((c) => c.name);
+  if (!names.includes("urls")) {
+    await db.createCollection("urls");
+
+    // await db.collection("urls").createIndex({ shortCode: 1 }, { unique: true });
+  }
+};
 if (process.env.NODE_ENV === "development") {
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri);

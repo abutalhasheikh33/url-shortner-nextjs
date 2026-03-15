@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function Home() {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     const response = await fetch("/api/shorten", {
@@ -16,9 +17,14 @@ export default function Home() {
     });
     const data = await response.json();
     setShortUrl(data.shortUrl);
+    setIsCopied(false);
   };
   const handleCopy = () => {
     navigator.clipboard.writeText(shortUrl);
+    setIsCopied(true);
+    // setTimeout(() => {
+    //   setIsCopied(false);
+    // }, 2000);
   };
   return (
     <div>
@@ -33,7 +39,10 @@ export default function Home() {
                 value={url}
                 onChange={setUrl}
               />
-              <button className="w-24" type="submit">
+              <button
+                className="w-24 cursor-pointer bg-white text-black"
+                type="submit"
+              >
                 Shorten
               </button>
             </div>
@@ -46,8 +55,12 @@ export default function Home() {
                 onChange={setShortUrl}
                 isReadOnly={true}
               />
-              <button type="button" className="w-24" onClick={handleCopy}>
-                Copy
+              <button
+                type="button"
+                className="w-24 cursor-pointer bg-white text-black"
+                onClick={handleCopy}
+              >
+                {isCopied ? "Copied" : "Copy"}
               </button>
             </div>
           </form>
