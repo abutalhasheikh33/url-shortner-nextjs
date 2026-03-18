@@ -16,7 +16,7 @@ export default function Home() {
       body: JSON.stringify({ url }),
     });
     const data = await response.json();
-    setShortUrl(data.shortUrl);
+    setShortUrl(`${data.shortUrl}`);
     setIsCopied(false);
   };
   const handleCopy = () => {

@@ -13,8 +13,9 @@ export const initDb = async (db: Db) => {
   const names = collections.map((c) => c.name);
   if (!names.includes("urls")) {
     await db.createCollection("urls");
-
-    // await db.collection("urls").createIndex({ shortCode: 1 }, { unique: true });
+  }
+  if (!names.includes("clicks")) {
+    await db.createCollection("clicks");
   }
 };
 if (process.env.NODE_ENV === "development") {
