@@ -2,11 +2,13 @@ import clientPromise from "@/app/lib/mongodb";
 import { initDb } from "@/app/lib/mongodb";
 import { NextResponse } from "next/server";
 import Url from "@/models/Url";
-import { Collection } from "mongodb";
+import { Collection, ObjectId } from "mongodb";
 import Click from "@/models/Click";
+import { getUrlByShortUrl } from "@/services/urlService";
 let urlCollection: Collection<Url> | null = null;
 let clickCollection: Collection<Click> | null = null;
 import moment from "moment";
+import { getShard } from "@/helpers/shard";
 async function getCollections() {
   if (!urlCollection) {
     const client = await clientPromise;
@@ -26,28 +28,35 @@ export async function GET(
   try {
     const { shortUrl } = await params;
     const { urlCollection, clickCollection } = await getCollections();
-    const url = await urlCollection?.findOne({ shortUrl });
-    if (!url) {
+    const result = await getUrlByShortUrl(shortUrl, urlCollection);
+
+    if (!result) {
       return NextResponse.json({ error: "URL not found" }, { status: 404 });
     }
-    await clickCollection?.updateOne(
+
+    const { url, _id } = result as { url: string; _id: ObjectId };
+    const shard = getShard();
+    clickCollection?.updateOne(
       {
-        urlId: url._id,
+        urlId: _id,
         date: moment.utc().format("YYYY-MM-DD"),
         hour: moment.utc().hour(),
+        shard: shard,
       },
       {
         $inc: { clicks: 1 },
         $setOnInsert: {
-          urlId: url._id,
+          urlId: _id,
           created_at: new Date(),
           date: moment.utc().format("YYYY-MM-DD"),
           hour: moment.utc().hour(),
+          shard: shard,
         },
       },
       { upsert: true },
     );
-    return NextResponse.redirect(url?.url as string);
+    return NextResponse.redirect(url);
+    //return NextResponse.json({ url: url });
   } catch (error) {
     console.error("Error fetching URLs:", error);
     return NextResponse.json(
@@ -56,19 +65,3 @@ export async function GET(
     );
   }
 }
-// export async function GET(
-//   request: Request,
-//   { params }: { params: { shortUrl: string } },
-// ) {
-//   const { shortUrl } = await params;
-
-//   const urlCollection = await getUrlCollection();
-
-//   const url = await urlCollection.findOne({ shortUrl });
-
-//   if (!url) {
-//     return NextResponse.json({ error: "URL not found" }, { status: 404 });
-//   }
-
-//   return NextResponse.json({ url: url.url });
-// }

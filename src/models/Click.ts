@@ -6,4 +6,5 @@ export default interface Click {
   date: string;
   clicks: number;
   createdAt?: Date;
+  shard: number;
 }
