@@ -1,33 +1,34 @@
-import clientPromise from "@/app/lib/mongodb";
-import { initDb } from "@/app/lib/mongodb";
+import { getDb, initDb } from "@/app/lib/mongodb";
 import { NextResponse } from "next/server";
 import Url from "@/models/Url";
 import { Collection, ObjectId } from "mongodb";
 import Click from "@/models/Click";
 import { getUrlByShortUrl } from "@/services/urlService";
-let urlCollection: Collection<Url> | null = null;
-let clickCollection: Collection<Click> | null = null;
 import moment from "moment";
 import { getShard } from "@/helpers/shard";
+
+let urlCollection: Collection<Url> | null = null;
+let clickCollection: Collection<Click> | null = null;
+
 async function getCollections() {
   if (!urlCollection) {
-    const client = await clientPromise;
-    const db = client.db("url-shortener");
+    const db = await getDb();
     await initDb(db);
     urlCollection = db.collection<Url>("urls");
     clickCollection = db.collection<Click>("clicks");
   }
-
   return { urlCollection, clickCollection };
 }
 
 export async function GET(
   request: Request,
-  { params }: { params: { shortUrl: string } },
+  { params }: { params: Promise<{ shortUrl: string }> },
 ) {
   try {
     const { shortUrl } = await params;
     const { urlCollection, clickCollection } = await getCollections();
+
+    // Lookup via Redis cache (cache-aside), fallback to MongoDB
     const result = await getUrlByShortUrl(shortUrl, urlCollection);
 
     if (!result) {
@@ -35,13 +36,15 @@ export async function GET(
     }
 
     const { url, _id } = result as { url: string; _id: ObjectId };
+
+    // Track click with application-level sharding to distribute write load
     const shard = getShard();
     clickCollection?.updateOne(
       {
         urlId: _id,
         date: moment.utc().format("YYYY-MM-DD"),
         hour: moment.utc().hour(),
-        shard: shard,
+        shard: shard,        // Random shard (0-9) prevents write hotspotting
       },
       {
         $inc: { clicks: 1 },
@@ -55,12 +58,12 @@ export async function GET(
       },
       { upsert: true },
     );
+
     return NextResponse.redirect(url);
-    //return NextResponse.json({ url: url });
   } catch (error) {
-    console.error("Error fetching URLs:", error);
+    console.error("Error fetching URL:", error);
     return NextResponse.json(
-      { error: "Failed to fetch URLs" },
+      { error: "Failed to fetch URL" },
       { status: 500 },
     );
   }

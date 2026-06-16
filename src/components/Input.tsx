@@ -1,5 +1,6 @@
 import { JSX } from "react";
 
+// Reusable input component with optional read-only mode
 type InputProps = {
   placeholder: string;
   value: string;
