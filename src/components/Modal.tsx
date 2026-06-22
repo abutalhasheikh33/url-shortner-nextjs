@@ -1,6 +1,6 @@
 "use client";
 
-import { JSX, useEffect, useRef } from "react";
+import { JSX, useEffect, useRef, useCallback } from "react";
 
 type ModalProps = {
   open: boolean;
@@ -12,27 +12,57 @@ export default function Modal({
   open,
   onClose,
   children,
-}: ModalProps): JSX.Element {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+}: ModalProps): JSX.Element | null {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    const el = dialogRef.current;
-    if (!el) return;
-
     if (open) {
-      el.showModal();
+      previousActiveElement.current = document.activeElement as HTMLElement;
+      document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => modalRef.current?.focus());
     } else {
-      el.close();
+      document.body.style.overflow = "";
+      previousActiveElement.current?.focus();
     }
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) onClose();
+    },
+    [onClose],
+  );
+
+  if (!open) return null;
+
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      className="rounded-lg shadow-xl p-6 backdrop:bg-black/50 max-w-md w-full"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onClick={handleBackdropClick}
     >
-      {children}
-    </dialog>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        tabIndex={-1}
+        className="relative bg-white text-gray-900 rounded-xl shadow-2xl p-6 w-[90vw] max-w-[450px] max-h-[90vh] overflow-y-auto outline-none"
+      >
+        {children}
+      </div>
+    </div>
   );
 }

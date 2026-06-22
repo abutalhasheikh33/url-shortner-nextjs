@@ -9,6 +9,7 @@ export default function Home() {
   const [shortUrl, setShortUrl] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [recentCode, setRecentCode] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,8 +21,12 @@ export default function Home() {
     });
 
     const data = await response.json();
-    setShortUrl(`${data.shortUrl}`);
+    const fullUrl = data.shortUrl;
+    setShortUrl(fullUrl);
     setIsCopied(false);
+
+    const code = fullUrl.split("/").pop() || "";
+    setRecentCode(code);
   };
 
   const handleCopy = () => {
@@ -79,8 +84,13 @@ export default function Home() {
         </div>
       </div>
 
-      <StatsModal open={statsOpen} onClose={() => setStatsOpen(false)} />
+      <StatsModal
+        open={statsOpen}
+        onClose={() => {
+          setStatsOpen(false);
+        }}
+        recentShortUrl={recentCode}
+      />
     </div>
   );
 }
-
