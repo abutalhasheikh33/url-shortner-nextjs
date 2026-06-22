@@ -28,7 +28,6 @@ export async function GET(
     const { shortUrl } = await params;
     const { urlCollection, clickCollection } = await getCollections();
 
-    // Lookup via Redis cache (cache-aside), fallback to MongoDB
     const result = await getUrlByShortUrl(shortUrl, urlCollection);
 
     if (!result) {
@@ -37,14 +36,13 @@ export async function GET(
 
     const { url, _id } = result as { url: string; _id: ObjectId };
 
-    // Track click with application-level sharding to distribute write load
     const shard = getShard();
     clickCollection?.updateOne(
       {
         urlId: _id,
         date: moment.utc().format("YYYY-MM-DD"),
         hour: moment.utc().hour(),
-        shard: shard,        // Random shard (0-9) prevents write hotspotting
+        shard: shard,
       },
       {
         $inc: { clicks: 1 },

@@ -34,9 +34,9 @@
 - Accepts a long URL and returns a 6-character shortened code
 - Uses **base-36 encoding** (`Math.random().toString(36).substring(2, 8)`) for a keyspace of ~2.17 billion possible combinations
 - **Deduplication**: If a long URL already exists in the system, returns the existing short URL instead of creating a duplicate
-- Full redirect URL is returned: `http://localhost:3000/api/fetchUrl/{shortUrl}`
+- Full redirect URL is returned: `http://localhost:3000/{shortUrl}`
 
-### 2. URL Redirection (GET /api/fetchUrl/:shortUrl)
+### 2. URL Redirection (GET /:shortUrl)
 - Looks up the short URL code (first from **Redis cache**, fallback to **MongoDB**)
 - Returns an **HTTP 302 redirect** to the original long URL
 - **Click tracking** is performed asynchronously (upsert into clicks collection)

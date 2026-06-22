@@ -42,14 +42,14 @@ export async function POST(request: Request) {
 
     if (existingUrl) {
       return NextResponse.json({
-        shortUrl: `${BASE_URL}/api/fetchUrl/${existingUrl.shortUrl}`,
+        shortUrl: `${BASE_URL}/${existingUrl.shortUrl}`,
       });
     }
 
     await urlCollection?.insertOne(urlData);
 
     return NextResponse.json({
-      shortUrl: `${BASE_URL}/api/fetchUrl/${shortUrl}`,
+      shortUrl: `${BASE_URL}/${shortUrl}`,
     });
   } catch (error) {
     console.error("Error creating short URL:", error);

@@ -11,7 +11,7 @@ export async function getUrlByShortUrl(
   urlCollection: Collection<Url>,
 ) {
   const redis = await getRedisClient();
-
+  console.log("Redis client connected:", redis.isOpen);
   // 1. Check Redis cache first (sub-millisecond lookup)
   const cached = await redis.get(`${CACHE_KEY_PREFIX}${shortUrl}`);
 
