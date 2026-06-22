@@ -32,6 +32,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+**Production:** [https://url-shortner-nextjs-seven.vercel.app](https://url-shortner-nextjs-seven.vercel.app)
+
 ## Environment Variables
 
 | Variable | Default | Description |

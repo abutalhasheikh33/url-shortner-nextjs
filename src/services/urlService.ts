@@ -1,4 +1,4 @@
-import { Collection } from "mongodb";
+import { Collection, ObjectId } from "mongodb";
 import Url from "@/models/Url";
 import { getRedisClient } from "@/app/lib/redis";
 
@@ -11,13 +11,13 @@ export async function getUrlByShortUrl(
   urlCollection: Collection<Url>,
 ) {
   const redis = await getRedisClient();
-  console.log("Redis client connected:", redis.isOpen);
+  
   // 1. Check Redis cache first (sub-millisecond lookup)
   const cached = await redis.get(`${CACHE_KEY_PREFIX}${shortUrl}`);
 
   if (cached) {
     const { url, _id } = JSON.parse(cached);
-    return { url, _id, source: "cache" };
+    return { url, _id: new ObjectId(_id), source: "cache" };
   }
 
   // 2. On cache miss, fall back to MongoDB

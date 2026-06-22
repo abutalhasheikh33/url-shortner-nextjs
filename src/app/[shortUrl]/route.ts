@@ -60,9 +60,6 @@ export async function GET(
     return NextResponse.redirect(url);
   } catch (error) {
     console.error("Error fetching URL:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch URL" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch URL" }, { status: 500 });
   }
 }

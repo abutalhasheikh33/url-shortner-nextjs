@@ -1,14 +1,15 @@
 "use client";
 
 import Input from "@/components/Input";
+import StatsModal from "@/components/StatsModal";
 import { useState, FormEvent } from "react";
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [shortUrl, setShortUrl] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
-  // Submit long URL to the API and display the generated short URL
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -23,7 +24,6 @@ export default function Home() {
     setIsCopied(false);
   };
 
-  // Copy short URL to clipboard with visual feedback
   const handleCopy = () => {
     navigator.clipboard.writeText(shortUrl);
     setIsCopied(true);
@@ -36,7 +36,6 @@ export default function Home() {
 
         <div className="p-10 w-full max-w-[800px]">
           <form className="flex flex-col gap-4 w-full" onSubmit={handleSubmit}>
-            {/* Row 1: URL input + Shorten button */}
             <div className="flex gap-2 w-full">
               <Input
                 placeholder="Enter your URL"
@@ -51,7 +50,6 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Row 2: Short URL output + Copy button */}
             <div className="flex gap-2 w-full">
               <Input
                 placeholder="Short URL"
@@ -68,8 +66,20 @@ export default function Home() {
               </button>
             </div>
           </form>
+
+          <div className="flex justify-center mt-6">
+            <button
+              type="button"
+              onClick={() => setStatsOpen(true)}
+              className="cursor-pointer text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              Get Stats
+            </button>
+          </div>
         </div>
       </div>
+
+      <StatsModal open={statsOpen} onClose={() => setStatsOpen(false)} />
     </div>
   );
 }
